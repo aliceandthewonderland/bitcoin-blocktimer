@@ -1,0 +1,19 @@
+{
+  "name": "bitcoin-block-timer",
+  "version": "1.0.0",
+  "description": "A focus timer that measures time using Bitcoin blocks",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^20.1.0",
+    "electron-builder": "^23.3.3"
+  },
+  "dependencies": {
+    "websocket": "^1.0.34"
+  }
+} 
