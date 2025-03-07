@@ -20,244 +20,90 @@
       border-radius: 8px;
     }
 
-    .titlebar {
-      height: 32px;
+    .mini-window {
+      -webkit-app-region: drag;
       background: rgba(26, 26, 26, 0.95);
+      border-radius: 8px;
+      padding: 10px;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(249, 180, 4, 0.3);
+    }
+
+    .task {
+      color: #f9b404;
+      font-weight: bold;
+      font-size: 14px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .blocks-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 10px;
-      -webkit-app-region: drag;
-      border-top-left-radius: 8px;
-      border-top-right-radius: 8px;
     }
 
-    .title {
-      color: #f9b404;
-      font-size: 14px;
-      font-weight: bold;
-    }
-
-    .close-button {
-      -webkit-app-region: no-drag;
-      width: 32px;
-      height: 32px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      color: #f0f0f0;
-    }
-
-    .close-button:hover {
-      background-color: #e81123;
-    }
-
-    .searching-container {
-      text-align: center;
-      padding: 20px;
-      background-color: rgba(42, 42, 42, 0.95);
-      width: 100%;
-      height: calc(100vh - 32px);
-      animation: searching-pulse 2s infinite;
-      border-bottom-left-radius: 8px;
-      border-bottom-right-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-    }
-
-    @keyframes searching-pulse {
-      0% {
-        background-color: rgba(42, 42, 42, 0.95);
-      }
-      50% {
-        background-color: rgba(58, 58, 58, 0.95);
-      }
-      100% {
-        background-color: rgba(42, 42, 42, 0.95);
-      }
-    }
-
-    .focused-task {
-      background-color: rgba(58, 58, 58, 0.8);
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 10px;
-    }
-
-    .focused-task h2 {
-      font-size: 14px;
-      color: #f9b404;
-      margin-bottom: 8px;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-    }
-
-    .task-text {
-      font-size: 20px;
-      font-weight: bold;
+    .blocks-count {
       color: #ffffff;
-    }
-
-    .timer-info {
-      display: flex;
-      justify-content: space-around;
-      background-color: rgba(58, 58, 58, 0.8);
-      padding: 15px;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    .timer-info > div {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .timer-info .label {
-      color: #999;
       font-size: 12px;
-      text-transform: uppercase;
     }
 
-    .timer-info .value {
-      color: #f9b404;
-      font-weight: bold;
-      font-size: 18px;
-    }
-
-    .searching-text {
-      font-size: 24px;
-      font-weight: bold;
-      color: #f9b404;
-      text-align: center;
-      margin: 5px 0;
-    }
-
-    .motivation-text {
-      margin-top: auto;
-      font-size: 14px;
-      font-style: italic;
-      color: #cccccc;
-    }
-
-    .dots {
-      display: flex;
-      justify-content: center;
+    .blocks-progress {
+      height: 4px;
+      background-color: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
       margin-top: 5px;
     }
 
-    .dot {
-      width: 6px;
-      height: 6px;
+    .progress-bar {
+      height: 100%;
       background-color: #f9b404;
-      border-radius: 50%;
-      animation: dot-pulse 1.5s infinite;
-    }
-
-    .dot:nth-child(2) {
-      animation-delay: 0.2s;
-      margin: 0 8px;
-    }
-
-    .dot:nth-child(3) {
-      animation-delay: 0.4s;
-    }
-
-    @keyframes dot-pulse {
-      0% {
-        transform: scale(1);
-        opacity: 1;
-      }
-      50% {
-        transform: scale(1.5);
-        opacity: 0.5;
-      }
-      100% {
-        transform: scale(1);
-        opacity: 1;
-      }
-    }
-
-    /* Simple styles for the button */
-    #minimize-btn {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      padding: 5px 10px;
-      background-color: #ccc;
-      border: none;
-      cursor: pointer;
-      border-radius: 3px;
+      width: 0%;
+      transition: width 0.5s ease;
     }
   </style>
 </head>
 <body>
-  <div class="titlebar">
-    <div class="title">Searching for Blocks</div>
+  <div class="mini-window">
+    <div class="task" id="task-text">Loading...</div>
+    <div class="blocks-info">
+      <div class="blocks-count">
+        <span id="blocks-passed">0</span>/<span id="blocks-total">0</span> blocks
+      </div>
+      <div class="blocks-count">
+        Block <span id="current-block">-</span>
+      </div>
+    </div>
+    <div class="blocks-progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
   </div>
-  
-  <div class="searching-container">
-    <div class="focused-task">
-      <h2>FOCUS ON:</h2>
-      <div class="task-text" id="task-text">Loading...</div>
-    </div>
-
-    <div class="timer-info">
-      <div class="start-block">
-        <span class="label">Start Block</span>
-        <span class="value" id="start-block">-</span>
-      </div>
-      <div class="target-block">
-        <span class="label">Target Block</span>
-        <span class="value" id="target-block">-</span>
-      </div>
-      <div class="blocks-passed">
-        <span class="label">Progress</span>
-        <span class="value"><span id="blocks-passed">0</span>/<span id="blocks-total">0</span></span>
-      </div>
-    </div>
-
-    <div class="searching-text" id="searching-text">Searching for new blocks...</div>
-    <div class="dots">
-      <span class="dot"></span>
-      <span class="dot"></span>
-      <span class="dot"></span>
-    </div>
-    <div class="motivation-text">Stay focused! The blockchain is working hard, and so should you!</div>
-  </div>
-
-  <!-- Minimize Button -->
-  <button id="minimize-btn">_</button>
 
   <script>
     const { ipcRenderer } = require('electron');
     
-    // 메인 프로세스로부터 업데이트 수신
     ipcRenderer.on('update-searching', (event, data) => {
-      if (data.text) {
-        document.getElementById('searching-text').textContent = data.text;
-      }
       if (data.task) {
-        document.getElementById('task-text').textContent = data.task;
+        document.getElementById('task-text').textContent = data.task.toUpperCase();
       }
-      if (data.startBlock) {
-        document.getElementById('start-block').textContent = data.startBlock;
-      }
-      if (data.targetBlock) {
-        document.getElementById('target-block').textContent = data.targetBlock;
+      if (data.currentBlock) {
+        document.getElementById('current-block').textContent = data.currentBlock;
       }
       if (data.blocksPassed !== undefined && data.blocksTotal !== undefined) {
         document.getElementById('blocks-passed').textContent = data.blocksPassed;
         document.getElementById('blocks-total').textContent = data.blocksTotal;
+        
+        // Update progress bar
+        const progressPercent = (data.blocksPassed / data.blocksTotal) * 100;
+        document.getElementById('progress-bar').style.width = `${progressPercent}%`;
       }
-    });
-
-    // Add an event listener to the minimize button to send an IPC event
-    document.getElementById('minimize-btn').addEventListener('click', () => {
-      ipcRenderer.send('minimize-searching-window');
     });
   </script>
 </body>

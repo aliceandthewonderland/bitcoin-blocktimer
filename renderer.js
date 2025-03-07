@@ -264,92 +264,102 @@ function updateSelectedBlocks() {
   });
 }
 
-// Start the timer
-startButton.addEventListener('click', function() {
-  if (!currentBlock) {
-    alert('Waiting for blockchain connection. Please try again in a moment.');
-    return;
-  }
+// Create animated block element
+function createAnimatedBlock(blockHeight, isTarget = false, isCurrent = false) {
+  const block = document.createElement('div');
+  block.className = 'animated-block';
+  if (isTarget) block.classList.add('target');
+  if (isCurrent) block.classList.add('current');
   
-  if (!taskInput.value.trim()) {
-    taskInput.classList.add('error');
+  // Create block number element
+  const blockNumber = document.createElement('div');
+  blockNumber.className = 'block-number';
+  blockNumber.textContent = blockHeight;
+  
+  // Create block label element
+  const blockLabel = document.createElement('div');
+  blockLabel.className = 'block-label';
+  blockLabel.textContent = isTarget ? 'TARGET' : (isCurrent ? 'CURRENT' : 'BLOCK');
+  
+  // Add elements to block
+  block.appendChild(blockNumber);
+  block.appendChild(blockLabel);
+  
+  return block;
+}
+
+// Create particle effects
+function createParticles(block, count = 10) {
+  const rect = block.getBoundingClientRect();
+  const container = document.getElementById('block-animation-container');
+  const containerRect = container.getBoundingClientRect();
+  
+  for (let i = 0; i < count; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'block-particle';
     
-    let errorMessage = document.querySelector('.task-input-error');
-    if (!errorMessage) {
-      errorMessage = document.createElement('div');
-      errorMessage.className = 'task-input-error';
-      errorMessage.textContent = 'Please enter a task to focus on';
-      document.querySelector('.task-input').appendChild(errorMessage);
+    // Position particle relative to the block
+    const x = rect.left - containerRect.left + rect.width / 2;
+    const y = rect.top - containerRect.top + rect.height / 2;
+    
+    particle.style.left = `${x}px`;
+    particle.style.top = `${y}px`;
+    
+    // Random direction and distance
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 30 + Math.random() * 50;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance;
+    
+    // Set CSS variables for the animation
+    particle.style.setProperty('--tx', `${tx}px`);
+    particle.style.setProperty('--ty', `${ty}px`);
+    
+    // Add animation
+    particle.style.animation = `particleAnimation ${0.5 + Math.random() * 1}s forwards`;
+    
+    // Add to container
+    container.appendChild(particle);
+    
+    // Remove particle after animation completes
+    setTimeout(() => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    }, 2000);
+  }
+}
+
+// Animate a block moving across the screen
+function animateBlock(blockHeight, isTarget = false, isCurrent = false) {
+  const animatedBlocksContainer = document.getElementById('animated-blocks');
+  const block = createAnimatedBlock(blockHeight, isTarget, isCurrent);
+  
+  // Add to container
+  animatedBlocksContainer.appendChild(block);
+  
+  // Start animation after a short delay
+  setTimeout(() => {
+    block.classList.add('moving');
+    
+    // Add pulse effect for important blocks
+    if (isTarget || isCurrent) {
+      block.classList.add('pulse');
     }
     
-    taskInput.addEventListener('input', function removeError() {
-      taskInput.classList.remove('error');
-      const errorMsg = document.querySelector('.task-input-error');
-      if (errorMsg) {
-        errorMsg.remove();
-      }
-      taskInput.removeEventListener('input', removeError);
-    });
+    // Create particles for important blocks
+    if (isTarget || isCurrent) {
+      createParticles(block);
+    }
     
-    return;
-  }
-  
-  if (isTimerRunning) {
-    return; // Timer is already running
-  }
-  
-  // Set the start and target blocks
-  startBlock = currentBlock;
-  targetBlock = startBlock + selectedBlockCount;
-  
-  // Update state
-  isTimerRunning = true;
-  
-  // Update UI
-  startButton.textContent = 'Timer Running';
-  startButton.disabled = true;
-  resetButton.disabled = false;
-  blockSlider.disabled = true;
-  taskInput.disabled = true;
-  
-  // Display searching animation and timer info in a separate window
-  ipcRenderer.send('show-searching', {
-    text: `Searching for new blocks... ${targetBlock - currentBlock} more to go!`,
-    task: taskInput.value,
-    startBlock: startBlock,
-    targetBlock: targetBlock,
-    blocksPassed: 0,
-    blocksTotal: selectedBlockCount
-  });
-  
-  // Hide unnecessary UI elements
-  document.querySelector('.block-selector').style.display = 'none';
-  document.querySelector('.task-input').classList.add('task-active');
-  document.querySelector('.timer-display').style.display = 'none';
-});
-
-// Reset the timer
-resetButton.addEventListener('click', function() {
-  // Reset state
-  isTimerRunning = false;
-  startBlock = null;
-  targetBlock = null;
-  
-  // Update UI
-  startButton.textContent = 'Start Timer';
-  startButton.disabled = false;
-  resetButton.disabled = true;
-  blockSlider.disabled = false;
-  taskInput.disabled = false;
-  
-  // Close search window
-  ipcRenderer.send('hide-searching');
-  
-  // Show timer settings and restore original UI
-  document.querySelector('.block-selector').style.display = 'block';
-  document.querySelector('.task-input').classList.remove('task-active');
-  document.querySelector('.timer-display').style.display = 'block';
-});
+    // Remove block after animation completes
+    setTimeout(() => {
+      if (block.parentNode) {
+        block.parentNode.removeChild(block);
+      }
+    }, 10000); // Match the animation duration
+  }, 100);
+}
 
 // Update the timer when a new block is found
 function updateTimer() {
@@ -364,13 +374,19 @@ function updateTimer() {
   
   // Update search window with current timer information
   ipcRenderer.send('update-searching', {
-    text: `Searching for new blocks... ${targetBlock - currentBlock} more to go!`,
     task: taskInput.value,
     startBlock: startBlock,
     targetBlock: targetBlock,
     blocksPassed: blocksPassed,
-    blocksTotal: blocksTotal
+    blocksTotal: blocksTotal,
+    currentBlock: currentBlock
   });
+  
+  // Animate the new block
+  animateBlock(currentBlock, currentBlock === targetBlock, true);
+  
+  // Add timer-active class to container to show animation
+  document.querySelector('.container').classList.add('timer-active');
   
   // Check if the timer is complete
   if (currentBlock >= targetBlock) {
@@ -390,7 +406,7 @@ function updateTimer() {
     // Show timer settings and restore original UI
     document.querySelector('.block-selector').style.display = 'block';
     document.querySelector('.task-input').classList.remove('task-active');
-    document.querySelector('.timer-display').style.display = 'block';
+    document.querySelector('.container').classList.remove('timer-active');
     
     // Show completion message
     alert('Timer complete! You have successfully focused for the target number of blocks.');
@@ -399,6 +415,87 @@ function updateTimer() {
     generateBlocks();
   }
 }
+
+// Start timer button click handler
+startButton.addEventListener('click', function() {
+  // Validate task input
+  const task = taskInput.value.trim();
+  if (!task) {
+    taskInput.classList.add('error');
+    const errorElement = document.createElement('div');
+    errorElement.className = 'task-input-error';
+    errorElement.textContent = 'Please enter a task to focus on';
+    taskInput.parentNode.appendChild(errorElement);
+    return;
+  }
+  
+  // Set the start and target blocks
+  startBlock = currentBlock;
+  targetBlock = startBlock + selectedBlockCount;
+  
+  // Update state
+  isTimerRunning = true;
+  
+  // Update UI
+  startButton.textContent = 'Timer Running';
+  startButton.disabled = true;
+  resetButton.disabled = false;
+  blockSlider.disabled = true;
+  taskInput.disabled = true;
+  
+  // Add timer-active class to container to show animation
+  document.querySelector('.container').classList.add('timer-active');
+  
+  // Animate the current block
+  animateBlock(currentBlock, false, true);
+  
+  // Animate the target block (preview)
+  setTimeout(() => {
+    animateBlock(targetBlock, true, false);
+  }, 2000);
+  
+  // Display searching animation and timer info in a separate window
+  ipcRenderer.send('show-searching', {
+    task: taskInput.value,
+    startBlock: startBlock,
+    targetBlock: targetBlock,
+    blocksPassed: 0,
+    blocksTotal: selectedBlockCount,
+    currentBlock: currentBlock
+  });
+  
+  // Hide unnecessary UI elements
+  document.querySelector('.block-selector').style.display = 'none';
+  document.querySelector('.task-input').classList.add('task-active');
+});
+
+// Reset the timer
+resetButton.addEventListener('click', function() {
+  // Reset state
+  isTimerRunning = false;
+  startBlock = null;
+  targetBlock = null;
+  
+  // Update UI
+  startButton.textContent = 'Start Timer';
+  startButton.disabled = false;
+  resetButton.disabled = true;
+  blockSlider.disabled = false;
+  taskInput.disabled = false;
+  
+  // Close search window
+  ipcRenderer.send('hide-searching');
+  
+  // Clear animation container
+  document.getElementById('animated-blocks').innerHTML = '';
+  
+  // Remove timer-active class
+  document.querySelector('.container').classList.remove('timer-active');
+  
+  // Show timer settings and restore original UI
+  document.querySelector('.block-selector').style.display = 'block';
+  document.querySelector('.task-input').classList.remove('task-active');
+});
 
 // Request notification permission on start
 if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {

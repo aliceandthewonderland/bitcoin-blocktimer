@@ -25,11 +25,11 @@ function createWindow() {
 // Create a separate window for search animation
 function createSearchingWindow() {
   // Get the screen size
-  const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+  const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
   
   searchingWindow = new BrowserWindow({
-    width: 600,
-    height: 400,
+    width: 300,
+    height: 120,
     frame: false,
     transparent: true,
     alwaysOnTop: true,
@@ -38,7 +38,7 @@ function createSearchingWindow() {
       contextIsolation: false
     },
     skipTaskbar: true, // Do not show on taskbar
-    x: screenWidth - 620, // 20px margin from the right
+    x: screenWidth - 320, // 20px margin from the right
     y: 20, // 20px margin from the top
     resizable: false, // Not resizable
     movable: true,
@@ -86,7 +86,12 @@ ipcMain.on('show-searching', (event, data) => {
   
   // Send data to search window
   searchingWindow.webContents.on('did-finish-load', () => {
-    searchingWindow.webContents.send('update-searching', data);
+    searchingWindow.webContents.send('update-searching', {
+      task: data.task,
+      blocksPassed: data.blocksPassed,
+      blocksTotal: data.blocksTotal,
+      currentBlock: data.currentBlock
+    });
     searchingWindow.show();
     
     // Minimize main window
@@ -98,13 +103,23 @@ ipcMain.on('show-searching', (event, data) => {
 
 // Update search window when timer is updated
 ipcMain.on('update-searching', (event, data) => {
-  if (searchingWindow) {
-    searchingWindow.webContents.send('update-searching', data);
-  } else {
-    // Recreate search window if it was closed
+  if (searchingWindow && searchingWindow.webContents) {
+    searchingWindow.webContents.send('update-searching', {
+      task: data.task,
+      blocksPassed: data.blocksPassed,
+      blocksTotal: data.blocksTotal,
+      currentBlock: data.currentBlock
+    });
+  } else if (!searchingWindow) {
+    // Recreate search window if it was accidentally closed
     createSearchingWindow();
     searchingWindow.webContents.on('did-finish-load', () => {
-      searchingWindow.webContents.send('update-searching', data);
+      searchingWindow.webContents.send('update-searching', {
+        task: data.task,
+        blocksPassed: data.blocksPassed,
+        blocksTotal: data.blocksTotal,
+        currentBlock: data.currentBlock
+      });
       searchingWindow.show();
     });
   }
@@ -116,11 +131,6 @@ ipcMain.on('hide-searching', () => {
     searchingWindow.close();
     searchingWindow = null;
   }
-});
-
-// Listen for messages from the renderer process
-ipcMain.on('update-task', (event, task) => {
-  console.log('Task updated:', task);
 });
 
 // Add this listener near your other ipcMain event listeners

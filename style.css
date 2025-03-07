@@ -421,4 +421,159 @@ body {
     transform: scale(0.5);
     opacity: 0.5;
   }
+}
+
+.large-block-info {
+  text-align: center;
+  padding: 20px;
+  background: rgba(58, 58, 58, 0.8);
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.large-block-info h1 {
+  font-size: 36px;
+  color: #f9b404;
+  margin-bottom: 15px;
+}
+
+.large-block-info h2 {
+  font-size: 24px;
+  color: #ffffff;
+}
+
+.large-block-info span {
+  color: #f9b404;
+  font-weight: bold;
+}
+
+/* Block Animation Styles */
+.block-animation-container {
+  position: relative;
+  height: 120px;
+  margin: 20px 0;
+  background-color: #2a2a2a;
+  border-radius: 8px;
+  overflow: hidden;
+  display: none; /* Hidden by default, shown when timer starts */
+}
+
+.blockchain-path {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background-color: rgba(249, 180, 4, 0.3);
+  transform: translateY(-50%);
+}
+
+.animated-blocks {
+  position: relative;
+  height: 100%;
+}
+
+.animated-block {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: #f9b404;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #121212;
+  font-weight: bold;
+  box-shadow: 0 0 15px rgba(249, 180, 4, 0.5);
+  transition: transform 0.3s ease;
+  z-index: 2;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.animated-block .block-number {
+  font-size: 14px;
+  color: #121212;
+  margin-bottom: 2px;
+}
+
+.animated-block .block-label {
+  font-size: 10px;
+  color: #121212;
+}
+
+@keyframes moveBlock {
+  0% {
+    left: -60px;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    left: calc(100% + 60px);
+    opacity: 0;
+  }
+}
+
+.animated-block.moving {
+  animation: moveBlock 10s linear forwards;
+}
+
+.animated-block.target {
+  background-color: #ff5722;
+  box-shadow: 0 0 20px rgba(255, 87, 34, 0.7);
+}
+
+.animated-block.current {
+  background-color: #4caf50;
+  box-shadow: 0 0 20px rgba(76, 175, 80, 0.7);
+}
+
+/* Pulse animation for blocks */
+@keyframes pulse {
+  0% {
+    transform: translateY(-50%) scale(1);
+  }
+  50% {
+    transform: translateY(-50%) scale(1.1);
+  }
+  100% {
+    transform: translateY(-50%) scale(1);
+  }
+}
+
+.animated-block.pulse {
+  animation: pulse 1s infinite;
+}
+
+/* Block particles effect */
+.block-particle {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background-color: #f9b404;
+  border-radius: 50%;
+  opacity: 0.8;
+  z-index: 1;
+}
+
+@keyframes particleAnimation {
+  0% {
+    transform: translate(0, 0);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty));
+    opacity: 0;
+  }
+}
+
+/* Show animation container when timer is active */
+.timer-active .block-animation-container {
+  display: block;
 } 
