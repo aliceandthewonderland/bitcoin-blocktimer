@@ -18,8 +18,6 @@ function createWindow() {
 
   mainWindow.loadFile('index.html');
   
-  // Open DevTools if needed
-  // mainWindow.webContents.openDevTools();
 }
 
 // Create a separate window for search animation
