@@ -610,7 +610,7 @@ function updateTimer() {
     document.querySelector('.container').classList.remove('timer-active');
     
     // Show completion message
-    alert('Timer complete! You have successfully focused for the target number of blocks.');
+    alert('Timer complete!');
     
     // Reset stacked blocks
     stackedBlocks = [];
@@ -630,6 +630,15 @@ startButton.addEventListener('click', function() {
     const errorElement = document.createElement('div');
     errorElement.className = 'task-input-error';
     errorElement.textContent = 'Please enter a task to focus on';
+    taskInput.parentNode.appendChild(errorElement);
+    return;
+  }
+
+  if (selectedBlockCount === 0) {
+    taskInput.classList.add('error');
+    const errorElement = document.createElement('div');
+    errorElement.className = 'task-input-error';
+    errorElement.textContent = 'Please select at least 1 block';
     taskInput.parentNode.appendChild(errorElement);
     return;
   }
