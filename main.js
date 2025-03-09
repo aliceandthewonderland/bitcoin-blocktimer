@@ -22,7 +22,7 @@ function createWindow() {
 
 // Create a separate window for search animation
 function createSearchingWindow() {
-  // Get the screen size
+  // Get screen size
   const { width: screenWidth, height: screenHeight } = screen.getPrimaryDisplay().workAreaSize;
   
   searchingWindow = new BrowserWindow({
@@ -36,7 +36,7 @@ function createSearchingWindow() {
       contextIsolation: false
     },
     skipTaskbar: true, // Do not show on taskbar
-    x: screenWidth - 320, // 20px margin from the right
+    x: Math.floor((screenWidth - 300) / 2), // center horizontally on the screen
     y: 20, // 20px margin from the top
     resizable: false, // Not resizable
     movable: true,

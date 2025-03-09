@@ -26,6 +26,15 @@ let blocks = [];
 let heartbeatInterval = null;
 let averageBlockTimeSeconds = 600; // Default value 10 minutes (600 seconds)
 
+// Add tracking for stacked blocks
+let stackedBlocks = [];
+const BLOCK_HEIGHT = 50; // Height of a block element
+const BLOCK_SPACING = 5; // Space between stacked blocks
+const MAX_VISIBLE_BLOCKS = 3; // Maximum blocks visible before scrolling
+
+// Track which block heights have already been stacked
+let stackedBlockHeights = new Set();
+
 // IPC communication setup
 const { ipcRenderer } = require('electron');
 
@@ -148,7 +157,7 @@ function connectToBlockchainAPI() {
           }));
           console.log('Heartbeat sent');
         }
-      }, 60000); // Send heartbeat every 60 seconds (changed from 30 seconds)
+      }, 60000); // Send heartbeat every 60 seconds 
     };
 
     // Handle incoming messages
@@ -158,11 +167,16 @@ function connectToBlockchainAPI() {
       // Handle new block notifications
       if (data.op === 'block') {
         const blockHeight = data.x.height;
+        
+        // Check if this is a new block (not just a reconnection ping)
+        const isNewBlock = blockHeight !== currentBlock;
+        
+        // Update current block
         currentBlock = blockHeight;
         updateBlockDisplay();
         
-        // Update timer if it's running
-        if (isTimerRunning) {
+        // Update timer if it's running and this is a new block
+        if (isTimerRunning && isNewBlock) {
           updateTimer();
         }
         
@@ -288,15 +302,39 @@ function createAnimatedBlock(blockHeight, isTarget = false, isCurrent = false) {
   return block;
 }
 
-// Create particle effects
-function createParticles(block, count = 10) {
+// Create standard particle effects
+function createParticles(block, count = 15) {
   const rect = block.getBoundingClientRect();
   const container = document.getElementById('block-animation-container');
   const containerRect = container.getBoundingClientRect();
   
+  // Get block color to match particles
+  const isTarget = block.classList.contains('target');
+  const isCurrent = block.classList.contains('current');
+  
+  let particleColor1, particleColor2;
+  if (isTarget) {
+    particleColor1 = '#ff7043';
+    particleColor2 = '#ff5722';
+  } else if (isCurrent) {
+    particleColor1 = '#66bb6a';
+    particleColor2 = '#4caf50';
+  } else {
+    particleColor1 = '#ffeb3b';
+    particleColor2 = '#f9b404';
+  }
+  
   for (let i = 0; i < count; i++) {
     const particle = document.createElement('div');
     particle.className = 'block-particle';
+    
+    // Randomize particle size
+    const size = 4 + Math.random() * 8;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    
+    // Set particle color
+    particle.style.background = `radial-gradient(circle, ${particleColor1}, ${particleColor2})`;
     
     // Position particle relative to the block
     const x = rect.left - containerRect.left + rect.width / 2;
@@ -307,16 +345,22 @@ function createParticles(block, count = 10) {
     
     // Random direction and distance
     const angle = Math.random() * Math.PI * 2;
-    const distance = 30 + Math.random() * 50;
+    const distance = 50 + Math.random() * 80;
     const tx = Math.cos(angle) * distance;
     const ty = Math.sin(angle) * distance;
     
+    // Add some gravity effect
+    const gravity = Math.random() * 20;
+    
     // Set CSS variables for the animation
     particle.style.setProperty('--tx', `${tx}px`);
-    particle.style.setProperty('--ty', `${ty}px`);
+    particle.style.setProperty('--ty', `${ty + gravity}px`);
+    
+    // Randomize animation duration
+    const duration = 0.8 + Math.random() * 1.5;
     
     // Add animation
-    particle.style.animation = `particleAnimation ${0.5 + Math.random() * 1}s forwards`;
+    particle.style.animation = `particleAnimation ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
     
     // Add to container
     container.appendChild(particle);
@@ -326,7 +370,80 @@ function createParticles(block, count = 10) {
       if (particle.parentNode) {
         particle.parentNode.removeChild(particle);
       }
-    }, 2000);
+    }, duration * 1000 + 100);
+  }
+}
+
+// Create particle effects for when blocks stack
+function createStackParticles(block) {
+  const rect = block.getBoundingClientRect();
+  const container = document.getElementById('block-animation-container');
+  const containerRect = container.getBoundingClientRect();
+  
+  // Get the final position
+  const blockBottom = parseInt(block.style.getPropertyValue('--stack-position') || '0');
+  
+  // Get block color to match particles
+  const isTarget = block.classList.contains('target');
+  const isCurrent = block.classList.contains('current');
+  
+  let particleColor1, particleColor2;
+  if (isTarget) {
+    particleColor1 = '#ff7043';
+    particleColor2 = '#ff5722';
+  } else if (isCurrent) {
+    particleColor1 = '#66bb6a';
+    particleColor2 = '#4caf50';
+  } else {
+    particleColor1 = '#ffeb3b';
+    particleColor2 = '#f9b404';
+  }
+  
+  // Create horizontal burst of particles
+  for (let i = 0; i < 20; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'block-particle';
+    
+    // Randomize particle size
+    const size = 3 + Math.random() * 6;
+    particle.style.width = `${size}px`;
+    particle.style.height = `${size}px`;
+    
+    // Set particle color
+    particle.style.background = `radial-gradient(circle, ${particleColor1}, ${particleColor2})`;
+    
+    // Position particle at the block's landing position
+    const x = rect.left - containerRect.left + rect.width / 2;
+    const y = containerRect.height - blockBottom - rect.height / 2;
+    
+    particle.style.left = `${x}px`;
+    particle.style.bottom = `${blockBottom - 5}px`;
+    
+    // Random direction and distance - more horizontally spread
+    const angle = (Math.random() * Math.PI) - Math.PI/2; // -90 to 90 degrees
+    const distance = 30 + Math.random() * 70;
+    const tx = Math.cos(angle) * distance;
+    const ty = Math.sin(angle) * distance * 0.5; // Less vertical movement
+    
+    // Set CSS variables for the animation
+    particle.style.setProperty('--tx', `${tx}px`);
+    particle.style.setProperty('--ty', `${ty}px`);
+    
+    // Randomize animation duration
+    const duration = 0.5 + Math.random() * 0.8;
+    
+    // Add animation
+    particle.style.animation = `particleAnimation ${duration}s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards`;
+    
+    // Add to container
+    container.appendChild(particle);
+    
+    // Remove particle after animation completes
+    setTimeout(() => {
+      if (particle.parentNode) {
+        particle.parentNode.removeChild(particle);
+      }
+    }, duration * 1000 + 100);
   }
 }
 
@@ -338,27 +455,74 @@ function animateBlock(blockHeight, isTarget = false, isCurrent = false) {
   // Add to container
   animatedBlocksContainer.appendChild(block);
   
-  // Start animation after a short delay
+  // Force a reflow before adding the animation class
+  void block.offsetWidth;
+  
+  // Calculate stacking position
+  let stackPosition = 10; // Base position from bottom (px)
+  if (stackedBlocks.length > 0) {
+    stackPosition = stackedBlocks.length * (BLOCK_HEIGHT + BLOCK_SPACING) + 10;
+  }
+  
+  // Set the CSS variable for positioning
+  block.style.setProperty('--stack-position', `${stackPosition}px`);
+  
+  // Add stacking animation
+  block.classList.add('stacking');
+  
+  // Add pulse effect
+  block.classList.add('pulse');
+  
+  // Create initial particles
+  createParticles(block, 8);
+  
+  // Create landing particles when the block stacks into position
   setTimeout(() => {
-    block.classList.add('moving');
+    createStackParticles(block);
+  }, 1000); // After the block has moved into position
+  
+  // Add block to tracked blocks
+  stackedBlocks.push(block);
+  
+  // Check if we need to scroll blocks (when we have more than MAX_VISIBLE_BLOCKS)
+  if (stackedBlocks.length > MAX_VISIBLE_BLOCKS) {
+    scrollBlocks();
+  }
+}
+
+// Function to scroll blocks down when new ones are added
+function scrollBlocks() {
+  // Need to scroll out oldest block
+  const blockToRemove = stackedBlocks[0];
+  
+  // Set animation parameters for all blocks
+  stackedBlocks.forEach((block, index) => {
+    const currentPos = parseInt(getComputedStyle(block).bottom);
+    const targetPos = index === 0 ? -BLOCK_HEIGHT : 
+                     (index - 1) * (BLOCK_HEIGHT + BLOCK_SPACING) + 10;
     
-    // Add pulse effect for important blocks
-    if (isTarget || isCurrent) {
-      block.classList.add('pulse');
+    block.style.setProperty('--current-position', `${currentPos}px`);
+    block.style.setProperty('--target-position', `${targetPos}px`);
+    
+    // Remove stacking class and add scrolling
+    block.classList.remove('stacking');
+    block.classList.add('scrolling');
+  });
+  
+  // After animation completes, remove the first block
+  setTimeout(() => {
+    if (blockToRemove && blockToRemove.parentNode) {
+      blockToRemove.parentNode.removeChild(blockToRemove);
+      stackedBlocks.shift();
+      
+      // Reset positions for remaining blocks
+      stackedBlocks.forEach((block, index) => {
+        const newPos = index * (BLOCK_HEIGHT + BLOCK_SPACING) + 10;
+        block.style.bottom = `${newPos}px`;
+        block.classList.remove('scrolling');
+      });
     }
-    
-    // Create particles for important blocks
-    if (isTarget || isCurrent) {
-      createParticles(block);
-    }
-    
-    // Remove block after animation completes
-    setTimeout(() => {
-      if (block.parentNode) {
-        block.parentNode.removeChild(block);
-      }
-    }, 10000); // Match the animation duration
-  }, 100);
+  }, 1000);
 }
 
 // Update the timer when a new block is found
@@ -382,8 +546,14 @@ function updateTimer() {
     currentBlock: currentBlock
   });
   
-  // Animate the new block
-  animateBlock(currentBlock, currentBlock === targetBlock, true);
+  // Check if this block has already been stacked to prevent duplicates
+  if (!stackedBlockHeights.has(currentBlock)) {
+    // Add to tracked heights
+    stackedBlockHeights.add(currentBlock);
+    
+    // Animate the new block
+    animateBlock(currentBlock, currentBlock === targetBlock, true);
+  }
   
   // Add timer-active class to container to show animation
   document.querySelector('.container').classList.add('timer-active');
@@ -400,6 +570,9 @@ function updateTimer() {
     blockSlider.disabled = false;
     taskInput.disabled = false;
     
+    // Reset tracked block heights
+    stackedBlockHeights.clear();
+    
     // Close search window
     ipcRenderer.send('hide-searching');
     
@@ -410,6 +583,10 @@ function updateTimer() {
     
     // Show completion message
     alert('Timer complete! You have successfully focused for the target number of blocks.');
+    
+    // Reset stacked blocks
+    stackedBlocks = [];
+    document.getElementById('animated-blocks').innerHTML = '';
     
     // Regenerate blocks
     generateBlocks();
@@ -429,9 +606,21 @@ startButton.addEventListener('click', function() {
     return;
   }
   
+  // Clear any existing stacked blocks
+  stackedBlocks = [];
+  document.getElementById('animated-blocks').innerHTML = '';
+  
+  // Reset tracked block heights
+  stackedBlockHeights.clear();
+  
   // Set the start and target blocks
   startBlock = currentBlock;
   targetBlock = startBlock + selectedBlockCount;
+  
+  // Store initial block height
+  if (currentBlock) {
+    stackedBlockHeights.add(currentBlock);
+  }
   
   // Update state
   isTimerRunning = true;
@@ -446,13 +635,8 @@ startButton.addEventListener('click', function() {
   // Add timer-active class to container to show animation
   document.querySelector('.container').classList.add('timer-active');
   
-  // Animate the current block
+  // Animate the initial block (current)
   animateBlock(currentBlock, false, true);
-  
-  // Animate the target block (preview)
-  setTimeout(() => {
-    animateBlock(targetBlock, true, false);
-  }, 2000);
   
   // Display searching animation and timer info in a separate window
   ipcRenderer.send('show-searching', {
@@ -483,11 +667,17 @@ resetButton.addEventListener('click', function() {
   blockSlider.disabled = false;
   taskInput.disabled = false;
   
+  // Reset tracked block heights
+  stackedBlockHeights.clear();
+  
   // Close search window
   ipcRenderer.send('hide-searching');
   
   // Clear animation container
   document.getElementById('animated-blocks').innerHTML = '';
+  
+  // Reset stacked blocks array
+  stackedBlocks = [];
   
   // Remove timer-active class
   document.querySelector('.container').classList.remove('timer-active');

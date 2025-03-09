@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="titlebar">
-    <div class="title">Bitcoin Block Timer</div>
+    <div class="title">₿ITCOIN Block Timer</div>
     <div class="window-controls">
       <div class="minimize-button" id="minimize-button">_</div>
       <div class="close-button" id="close-button">✕</div>
@@ -28,8 +28,19 @@
     
     <!-- Block animation container -->
     <div class="block-animation-container" id="block-animation-container">
-      <div class="blockchain-path"></div>
+      <div class="blockchain-path">
+        <!-- Adding glowing nodes to the blockchain path -->
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+        <div class="path-node"></div>
+      </div>
       <div class="animated-blocks" id="animated-blocks"></div>
+      <!-- Add background elements for a more visually interesting scene -->
+      <div class="block-animation-bg"></div>
     </div>
     
     <div class="block-selector">
