@@ -38,6 +38,14 @@ let stackedBlockHeights = new Set();
 // IPC communication setup
 const { ipcRenderer } = require('electron');
 
+// Track the last time a heartbeat was acknowledged
+let lastHeartbeatTime = Date.now();
+
+// Update the lastHeartbeatTime whenever a heartbeat is successful
+function updateHeartbeat() {
+  lastHeartbeatTime = Date.now();
+}
+
 // Close button handler
 closeButton.addEventListener('click', () => {
   window.close();
@@ -156,6 +164,7 @@ function connectToBlockchainAPI() {
             "op": "ping"
           }));
           console.log('Heartbeat sent');
+          updateHeartbeat();
         }
       }, 60000); // Send heartbeat every 60 seconds 
     };
@@ -711,4 +720,17 @@ if (Notification.permission !== 'granted' && Notification.permission !== 'denied
 document.addEventListener('DOMContentLoaded', function() {
   connectToBlockchainAPI();
   fetchAverageBlockTime();
-}); 
+});
+
+// Periodic UI check for connection state
+setInterval(() => {
+  const connectionStatusElement = document.getElementById('connection-status');
+  const now = Date.now();
+  
+  // If no heartbeat received within the threshold (e.g., 75 seconds), consider disconnected
+  if (now - lastHeartbeatTime > 75000) {
+    connectionStatusElement.textContent = 'Disconnected';
+  } else {
+    connectionStatusElement.textContent = 'Connected';
+  }
+}, 5000); // Check every 5 seconds 
