@@ -548,10 +548,25 @@ function updateTimer() {
   
   // Check if this block has already been stacked to prevent duplicates
   if (!stackedBlockHeights.has(currentBlock)) {
+    // Update any existing "current" blocks to be regular blocks
+    stackedBlocks.forEach(block => {
+      if (block.classList.contains('current')) {
+        block.classList.remove('current');
+        // Update the block label to say "BLOCK" instead of "CURRENT"
+        const blockLabel = block.querySelector('.block-label');
+        if (blockLabel) {
+          blockLabel.textContent = 'BLOCK';
+        }
+        // Update the block styling
+        block.style.background = 'linear-gradient(145deg, #ffc107, #f9b404)';
+        block.style.boxShadow = '0 0 15px rgba(249, 180, 4, 0.5), 0 5px 10px rgba(0, 0, 0, 0.3)';
+      }
+    });
+    
     // Add to tracked heights
     stackedBlockHeights.add(currentBlock);
     
-    // Animate the new block
+    // Animate the new block as the current block
     animateBlock(currentBlock, currentBlock === targetBlock, true);
   }
   
