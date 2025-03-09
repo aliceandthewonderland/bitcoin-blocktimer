@@ -21,7 +21,7 @@ let currentBlock = null;
 let startBlock = null;
 let targetBlock = null;
 let isTimerRunning = false;
-let selectedBlockCount = 0;
+let selectedBlockCount = 1;
 let blocks = [];
 let heartbeatInterval = null;
 let averageBlockTimeSeconds = 600; // Default value 10 minutes (600 seconds)
@@ -263,12 +263,25 @@ function generateBlocks() {
 
 // Update selected blocks based on slider value
 function updateSelectedBlocks() {
+  // On first run, default the selected value to 3 if it hasn’t been changed yet.
+  if (updateSelectedBlocks.firstRun === undefined) {
+    selectedBlockCount = 3;
+    if (blockSlider) {
+      blockSlider.value = 3;
+    }
+    if (blockCountElement) {
+      blockCountElement.textContent = `3 Blocks`;
+    }
+    updateSelectedBlocks.firstRun = false;
+    updateEstimatedTime();
+  }
+
   if (!blocks.length) return;
   
   blocks.forEach((block, index) => {
     block.classList.remove('current', 'selected');
     
-    if (index === 1) {
+    if (index === 0) {
       block.classList.add('current');
     }
     
