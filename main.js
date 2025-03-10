@@ -38,7 +38,7 @@ function createSearchingWindow() {
     skipTaskbar: true, // Do not show on taskbar
     x: Math.floor((screenWidth - 300) / 2), // center horizontally on the screen
     y: 20, // 20px margin from the top
-    resizable: false, // Not resizable
+    resizable: true, // Make window resizable
     movable: true,
     show: false
   });
@@ -136,5 +136,24 @@ ipcMain.on('hide-searching', () => {
 ipcMain.on('minimize-searching-window', () => {
   if (searchingWindow) {
     searchingWindow.minimize();
+  }
+});
+
+// Add this listener near your other ipcMain event listeners
+ipcMain.on('resize-searching-window', (event, data) => {
+  if (searchingWindow) {
+    // Get current size
+    const [width, height] = searchingWindow.getSize();
+    
+    // Calculate new height (base height + additional height for text)
+    // Increase maximum height to 400px to accommodate longer text
+    const newHeight = Math.min(Math.max(120, 120 + data.additionalHeight), 400);
+    
+    // Resize the window
+    searchingWindow.setSize(width, newHeight);
+    
+    // Re-center horizontally
+    const { width: screenWidth } = screen.getPrimaryDisplay().workAreaSize;
+    searchingWindow.setPosition(Math.floor((screenWidth - width) / 2), 20);
   }
 }); 

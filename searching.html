@@ -38,9 +38,9 @@
       color: #f9b404;
       font-weight: bold;
       font-size: 14px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      margin-bottom: 5px;
     }
 
     .blocks-info {
@@ -89,9 +89,37 @@
   <script>
     const { ipcRenderer } = require('electron');
     
+    // Function to calculate and request window resize
+    function calculateAndRequestResize() {
+      const taskElement = document.getElementById('task-text');
+      
+      // Get the computed style to account for padding, margins, etc.
+      const computedStyle = window.getComputedStyle(taskElement);
+      
+      // Calculate the actual height needed
+      const taskHeight = taskElement.scrollHeight;
+      const lineHeight = parseInt(computedStyle.lineHeight) || 20; // Default to 20px if not specified
+      
+      // Calculate how many lines of text we have
+      const lines = Math.ceil(taskHeight / lineHeight);
+      
+      // If more than one line, request resize
+      if (lines > 1) {
+        // Calculate additional height needed (each extra line needs lineHeight pixels)
+        const additionalHeight = (lines - 1) * lineHeight;
+        
+        ipcRenderer.send('resize-searching-window', { 
+          additionalHeight: additionalHeight
+        });
+      }
+    }
+    
     ipcRenderer.on('update-searching', (event, data) => {
       if (data.task) {
         document.getElementById('task-text').textContent = data.task.toUpperCase();
+        
+        // Wait a moment for the DOM to update before calculating size
+        setTimeout(calculateAndRequestResize, 50);
       }
       if (data.currentBlock) {
         document.getElementById('current-block').textContent = data.currentBlock;

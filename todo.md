@@ -1,7 +1,7 @@
 
 - [x] (index.html) (improve) animation of current process
     - [x] change current block
-- [ ] (searching.html) (issue) text limitation. cannot see full todo text. Flexible window box size
+- [x] (searching.html) (issue) text limitation. cannot see full todo text. Flexible window box size
 - [ ] (index.html) (issue) after time is up, cannot edit the task again.
 - [ ] (searching.html) (issue) close subwindow if main window gets closed
 - [ ] (issue) connection status constantly disconnected and connected (annoying)

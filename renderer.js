@@ -14,6 +14,7 @@ const blocksRow = document.getElementById('blocks-row');
 const searchingAnimation = document.getElementById('searching-animation');
 const closeButton = document.getElementById('close-button');
 const minimizeButton = document.getElementById('minimize-button');
+const charCounter = document.getElementById('char-counter');
 
 // State variables
 let websocket = null;
@@ -91,6 +92,28 @@ blockSlider.addEventListener('input', function() {
   blockCountElement.textContent = `${selectedBlockCount} ${selectedBlockCount === 1 ? 'Block' : 'Blocks'}`;
   updateSelectedBlocks();
   updateEstimatedTime();
+});
+
+// Character counter for task input
+taskInput.addEventListener('input', function() {
+  const charCount = this.value.length;
+  charCounter.textContent = `${charCount}/60`;
+  
+  // Remove any existing error messages when user starts typing again
+  const errorElement = taskInput.parentNode.querySelector('.task-input-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
+  taskInput.classList.remove('error');
+  
+  // Update counter color based on character count
+  if (charCount > 60) {
+    charCounter.className = 'char-counter limit-exceeded';
+  } else if (charCount > 50) {
+    charCounter.className = 'char-counter limit-warning';
+  } else {
+    charCounter.className = 'char-counter';
+  }
 });
 
 // Handle task input
@@ -263,7 +286,7 @@ function generateBlocks() {
 
 // Update selected blocks based on slider value
 function updateSelectedBlocks() {
-  // On first run, default the selected value to 3 if it hasn’t been changed yet.
+  // On first run, default the selected value to 3 if it hasn't been changed yet.
   if (updateSelectedBlocks.firstRun === undefined) {
     selectedBlockCount = 3;
     if (blockSlider) {
@@ -634,6 +657,21 @@ startButton.addEventListener('click', function() {
     return;
   }
 
+  // Check if task exceeds 60 character limit
+  if (task.length > 60) {
+    taskInput.classList.add('error');
+    // Remove any existing error messages first
+    const existingError = taskInput.parentNode.querySelector('.task-input-error');
+    if (existingError) {
+      existingError.remove();
+    }
+    const errorElement = document.createElement('div');
+    errorElement.className = 'task-input-error';
+    errorElement.textContent = 'Task should be less than 60 characters';
+    taskInput.parentNode.appendChild(errorElement);
+    return;
+  }
+
   if (selectedBlockCount === 0) {
     taskInput.classList.add('error');
     const errorElement = document.createElement('div');
@@ -733,4 +771,13 @@ if (Notification.permission !== 'granted' && Notification.permission !== 'denied
 document.addEventListener('DOMContentLoaded', function() {
   connectToBlockchainAPI();
   fetchAverageBlockTime();
+});
+
+// Clear error message when task input is focused
+taskInput.addEventListener('focus', function() {
+  const errorElement = taskInput.parentNode.querySelector('.task-input-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
+  taskInput.classList.remove('error');
 }); 
