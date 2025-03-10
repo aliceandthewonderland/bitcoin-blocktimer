@@ -200,10 +200,10 @@ function connectToBlockchainAPI() {
         const blockHeight = data.x.height;
         
         // Check if this is a new block (not just a reconnection ping)
-        const isNewBlock = blockHeight !== currentBlock;
+        const isNewBlock = blockHeight > currentBlock;
         
-        // Update current block
         currentBlock = blockHeight;
+
         updateBlockDisplay();
         
         // Update timer if it's running and this is a new block

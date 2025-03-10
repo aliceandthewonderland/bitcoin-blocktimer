@@ -9,3 +9,5 @@
 - [x] should be block - 1
     - [x] default to 3 blocks
     - [x] if selected 0 block, warn
+- [ ] (issue) sometimes the current height decreases by 1 @renderer.js (203 - 207)
+    - (maybe api prob?)
