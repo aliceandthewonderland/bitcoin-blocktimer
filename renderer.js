@@ -15,6 +15,7 @@ const searchingAnimation = document.getElementById('searching-animation');
 const closeButton = document.getElementById('close-button');
 const minimizeButton = document.getElementById('minimize-button');
 const charCounter = document.getElementById('char-counter');
+const clearButton = document.getElementById('clear-button');
 
 // State variables
 let websocket = null;
@@ -97,22 +98,29 @@ blockSlider.addEventListener('input', function() {
 // Character counter for task input
 taskInput.addEventListener('input', function() {
   const charCount = this.value.length;
-  charCounter.textContent = `${charCount}/60`;
+  charCounter.textContent = `${charCount}/120`;
   
   // Remove any existing error messages when user starts typing again
-  const errorElement = taskInput.parentNode.querySelector('.task-input-error');
+  const errorElement = taskInput.parentNode.parentNode.querySelector('.task-input-error');
   if (errorElement) {
     errorElement.remove();
   }
   taskInput.classList.remove('error');
   
   // Update counter color based on character count
-  if (charCount > 60) {
+  if (charCount > 120) {
     charCounter.className = 'char-counter limit-exceeded';
-  } else if (charCount > 50) {
+  } else if (charCount > 60) {
     charCounter.className = 'char-counter limit-warning';
   } else {
     charCounter.className = 'char-counter';
+  }
+  
+  // Show/hide clear button based on input content
+  if (charCount > 0) {
+    clearButton.style.display = 'flex';
+  } else {
+    clearButton.style.display = 'none';
   }
 });
 
@@ -650,34 +658,43 @@ startButton.addEventListener('click', function() {
   const task = taskInput.value.trim();
   if (!task) {
     taskInput.classList.add('error');
-    const errorElement = document.createElement('div');
-    errorElement.className = 'task-input-error';
-    errorElement.textContent = 'Please enter a task to focus on';
-    taskInput.parentNode.appendChild(errorElement);
-    return;
-  }
-
-  // Check if task exceeds 60 character limit
-  if (task.length > 60) {
-    taskInput.classList.add('error');
     // Remove any existing error messages first
-    const existingError = taskInput.parentNode.querySelector('.task-input-error');
+    const existingError = taskInput.parentNode.parentNode.querySelector('.task-input-error');
     if (existingError) {
       existingError.remove();
     }
     const errorElement = document.createElement('div');
     errorElement.className = 'task-input-error';
-    errorElement.textContent = 'Task should be less than 60 characters';
-    taskInput.parentNode.appendChild(errorElement);
+    errorElement.textContent = 'Please enter a task to focus on';
+    taskInput.parentNode.parentNode.appendChild(errorElement);
+    return;
+  }
+
+  // Check if task exceeds 120 character limit
+  if (task.length > 120) {
+    taskInput.classList.add('error');
+    // Remove any existing error messages first
+    const existingError = taskInput.parentNode.parentNode.querySelector('.task-input-error');
+    if (existingError) {
+      existingError.remove();
+    }
+    const errorElement = document.createElement('div');
+    errorElement.className = 'task-input-error';
+    errorElement.textContent = 'Task should be less than 120 characters';
+    taskInput.parentNode.parentNode.appendChild(errorElement);
     return;
   }
 
   if (selectedBlockCount === 0) {
-    taskInput.classList.add('error');
+    // Remove any existing error messages first
+    const existingError = taskInput.parentNode.parentNode.querySelector('.task-input-error');
+    if (existingError) {
+      existingError.remove();
+    }
     const errorElement = document.createElement('div');
     errorElement.className = 'task-input-error';
     errorElement.textContent = 'Please select at least 1 block';
-    taskInput.parentNode.appendChild(errorElement);
+    taskInput.parentNode.parentNode.appendChild(errorElement);
     return;
   }
   
@@ -775,9 +792,26 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Clear error message when task input is focused
 taskInput.addEventListener('focus', function() {
-  const errorElement = taskInput.parentNode.querySelector('.task-input-error');
+  const errorElement = taskInput.parentNode.parentNode.querySelector('.task-input-error');
   if (errorElement) {
     errorElement.remove();
   }
   taskInput.classList.remove('error');
+});
+
+// Clear button functionality
+clearButton.addEventListener('click', function() {
+  taskInput.value = '';
+  charCounter.textContent = '0/120';
+  charCounter.className = 'char-counter';
+  
+  // Remove any error messages
+  const errorElement = taskInput.parentNode.parentNode.querySelector('.task-input-error');
+  if (errorElement) {
+    errorElement.remove();
+  }
+  taskInput.classList.remove('error');
+  
+  // Focus back on the input field
+  taskInput.focus();
 }); 

@@ -88,15 +88,44 @@ body {
   position: relative;
 }
 
+.input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 .task-input input {
   width: 100%;
-  padding: 15px;
-  font-size: 18px;
-  border: none;
-  border-radius: 4px;
+  padding: 12px 40px 12px 15px;
+  border: 2px solid #444;
   background-color: #2a2a2a;
-  color: #f0f0f0;
+  color: #fff;
+  font-size: 16px;
+  border-radius: 4px;
+  transition: border-color 0.3s;
+}
+
+.clear-button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #888;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
   transition: all 0.2s ease;
+}
+
+.clear-button:hover {
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.1);
 }
 
 /* Add error styling for input field */
