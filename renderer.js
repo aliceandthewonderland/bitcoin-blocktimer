@@ -176,9 +176,9 @@ function connectToBlockchainAPI() {
       }));
       
       // Send a ping to get the latest block
-      websocket.send(JSON.stringify({
-        "op": "ping_block"
-      }));
+      // websocket.send(JSON.stringify({
+      //   "op": "ping_block"
+      // }));
       
       // Setup heartbeat to keep connection alive
       heartbeatInterval = setInterval(() => {
@@ -202,17 +202,19 @@ function connectToBlockchainAPI() {
         // Check if this is a new block (not just a reconnection ping)
         const isNewBlock = blockHeight > currentBlock;
         
-        currentBlock = blockHeight;
-
-        updateBlockDisplay();
-        
-        // Update timer if it's running and this is a new block
-        if (isTimerRunning && isNewBlock) {
-          updateTimer();
+        // Only update if the new block height is greater than current
+        if (isNewBlock) {
+          currentBlock = blockHeight;
+          updateBlockDisplay();
+          
+          // Update timer if it's running and this is a new block
+          if (isTimerRunning) {
+            updateTimer();
+          }
+          
+          // Regenerate blocks
+          generateBlocks();
         }
-        
-        // Regenerate blocks
-        generateBlocks();
       }
     };
 
