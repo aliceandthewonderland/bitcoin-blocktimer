@@ -40,6 +40,9 @@ let stackedBlockHeights = new Set();
 // IPC communication setup
 const { ipcRenderer } = require('electron');
 
+// Add to state variables
+let isSearchWindowOpen = false;
+
 // Close button handler
 closeButton.addEventListener('click', () => {
   window.close();
@@ -52,6 +55,7 @@ minimizeButton.addEventListener('click', () => {
 
 // Event handler for when the search window is closed
 ipcRenderer.on('searching-window-closed', () => {
+  isSearchWindowOpen = false;
   if (isTimerRunning) {
     const blocksRemaining = targetBlock - currentBlock;
     ipcRenderer.send('show-searching', {
@@ -582,15 +586,18 @@ function updateTimer() {
   const blocksTotal = targetBlock - startBlock;
   const blocksRemaining = targetBlock - currentBlock;
   
-  // Update search window with current timer information
-  ipcRenderer.send('update-searching', {
-    task: taskInput.value,
-    startBlock: startBlock,
-    targetBlock: targetBlock,
-    blocksPassed: blocksPassed,
-    blocksTotal: blocksTotal,
-    currentBlock: currentBlock
-  });
+  // Update search window with current timer information only if window isn't open
+  if (!isSearchWindowOpen) {
+    ipcRenderer.send('update-searching', {
+      task: taskInput.value,
+      startBlock: startBlock,
+      targetBlock: targetBlock,
+      blocksPassed: blocksPassed,
+      blocksTotal: blocksTotal,
+      currentBlock: currentBlock
+    });
+    isSearchWindowOpen = true;
+  }
   
   // Check if this block has already been stacked to prevent duplicates
   if (!stackedBlockHeights.has(currentBlock)) {
@@ -631,6 +638,10 @@ function updateTimer() {
     blockSlider.disabled = false;
     taskInput.disabled = false;
     
+    // Ensure task input is fully interactive
+    taskInput.classList.remove('disabled');
+    taskInput.setAttribute('placeholder', 'Enter a new task to focus on...');
+    
     // Reset tracked block heights
     stackedBlockHeights.clear();
     
@@ -651,6 +662,15 @@ function updateTimer() {
     
     // Regenerate blocks
     generateBlocks();
+    
+    // Ensure task input is visible and enabled after a short delay
+    setTimeout(() => {
+      const taskInputContainer = document.querySelector('.task-input');
+      taskInputContainer.style.display = 'block';
+      taskInputContainer.classList.remove('task-active');
+      taskInput.disabled = false;
+      taskInput.focus();
+    }, 100);
   }
 }
 
@@ -779,6 +799,13 @@ resetButton.addEventListener('click', function() {
   // Show timer settings and restore original UI
   document.querySelector('.block-selector').style.display = 'block';
   document.querySelector('.task-input').classList.remove('task-active');
+  
+  // Ensure task input is fully interactive
+  const taskInputContainer = document.querySelector('.task-input');
+  taskInputContainer.style.display = 'block';
+  taskInput.classList.remove('disabled');
+  taskInput.setAttribute('placeholder', 'Enter a task to focus on...');
+  taskInput.focus();
 });
 
 // Request notification permission on start
