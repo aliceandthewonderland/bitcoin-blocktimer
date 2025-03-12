@@ -586,16 +586,17 @@ function updateTimer() {
   const blocksTotal = targetBlock - startBlock;
   const blocksRemaining = targetBlock - currentBlock;
   
-  // Update search window with current timer information only if window isn't open
+  // Update search window with current timer information
+  ipcRenderer.send('update-searching', {
+    task: taskInput.value,
+    startBlock: startBlock,
+    targetBlock: targetBlock,
+    blocksPassed: blocksPassed,
+    blocksTotal: blocksTotal,
+    currentBlock: currentBlock
+  });
+  
   if (!isSearchWindowOpen) {
-    ipcRenderer.send('update-searching', {
-      task: taskInput.value,
-      startBlock: startBlock,
-      targetBlock: targetBlock,
-      blocksPassed: blocksPassed,
-      blocksTotal: blocksTotal,
-      currentBlock: currentBlock
-    });
     isSearchWindowOpen = true;
   }
   
@@ -736,7 +737,7 @@ startButton.addEventListener('click', function() {
     stackedBlockHeights.add(currentBlock);
   }
   
-  // Update state
+ // Update state
   isTimerRunning = true;
   
   // Update UI
